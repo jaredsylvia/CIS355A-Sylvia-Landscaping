@@ -16,7 +16,7 @@ public class Order {
 	private YardType yardType;
 	private IrrigationType irrigationType;
 	private List<PlantType> plantTypes;
-	private List<TreeType> treeTypes;
+	private TreeType treeType;
 	private double length, width; 
 	int orderID;
 	
@@ -28,20 +28,20 @@ public class Order {
 		yardType = new YardType();
 		irrigationType = new IrrigationType();
 		plantTypes = new ArrayList<PlantType>();
-		treeTypes = new ArrayList<TreeType>();
+		treeType = new TreeType();
 		length = 0;
 		width = 0;
 		orderID = 0;
 		
 	}
 	
-	public Order(Customer c, Address a, YardType y, IrrigationType i, List<PlantType> p, List<TreeType> t, double l, double w, int o) {
+	public Order(Customer c, Address a, YardType y, IrrigationType i, List<PlantType> p, TreeType t, double l, double w, int o) {
 		customer = c;
 		address =a;
 		yardType = y;
 		irrigationType = i;
 		plantTypes = p;
-		treeTypes = t;
+		treeType = t;
 		length = l;
 		width = w;
 		orderID = o;
@@ -51,25 +51,26 @@ public class Order {
 	@Override
 	public String toString() {
 		String plants = "";
-		String trees = "";
 		for(PlantType p: plantTypes) {
 			plants = plants + p.toString() + ",";
 		}
 		plants.substring(0, plants.length() - 1);
-		for(TreeType t: treeTypes) {
-			trees = trees + t.toString() + ",";
-		}
-		trees.substring(0, trees.length() -1);
-		
+			
 		return String.format("OrderID: %s\n"
 				+ "Customer: %s\n"
-				+ "Address: %s\n"
+				+ "Address: %s\n%s, %s %s\n"
 				+ "YardType: %s\n"
 				+ "IrrigationType: %s\n"
 				+ "Plants: %s\n"
-				+ "Trees: %s\n"
+				+ "Trees: %s - %s\n"
 				+ "Length: %s, Width: %s, Area: %s", 
-				orderID, address.toString(), yardType.toString(), irrigationType.toString(), plants, trees, length, width, getArea());
+				orderID, customer.getName(), address.getLine1(), address.getCity(), address.getState(), address.getZip(),
+				yardType.getType(), irrigationType.toString(), plants, treeType.getQty(), treeType.getType(), 
+				length, width, getArea());
+	}
+	
+	public void addPlant(PlantType plant) {
+		plantTypes.add(plant);
 	}
 	
 	//getters and setters
@@ -78,19 +79,22 @@ public class Order {
 	public YardType getYardType() {return yardType;}
 	public IrrigationType getIrrigationType() { return irrigationType;}
 	public List<PlantType> getPlantTypes() { return plantTypes;}
-	public List<TreeType> getTreeTypes() { return treeTypes;}
+	public TreeType getTreeTypes() { return treeType;}
 	public double getLength() { return length;}
 	public double getWidth() { return width;}
 	public double getArea() {return length * width;}
+	public int getOrderID() {return orderID;}
 	public double getCost() {
 		double plantCost = 0.0;
-		double treeCost = 0.0;
 		for(PlantType p: plantTypes) {
 			plantCost += p.getCost();
 		}
-		for(TreeType t: treeTypes) {
-			treeCost += t.getCost();
-		}
-		return plantCost + treeCost + (irrigationType.getPrice(this) * getArea()) + (yardType.getPrice() * getArea());
+		
+		return plantCost + treeType.getCost() + irrigationType.getPrice(this) + yardType.getCost(this);
 	}
+	
+	public void setLength(double l) {length = l;}
+	public void setWidth(double w) {width = w;}
+	public void setOrderID(int i) {orderID = i;}
+	
 }

@@ -18,7 +18,9 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.wb.swt.SWTResourceManager;
+
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Label;
@@ -26,11 +28,20 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Scale;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JOptionPane;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 
 
 public class MainGUI {
-
+	/* TODO: Move methods to prevent defining objects in beginning of class
+	 * or if this is a standard practice define every object in beginning of class
+	 * so that all methods can be defined prior to the construction of the form
+	*/
 	protected Shell shlJaredSylviaLandscapes;
 	private Text textOrderName;
 	private Text textOrderAddressOne;
@@ -49,6 +60,33 @@ public class MainGUI {
 	private Text textYardLength;
 	private Text textYardWidth;
 	private Text textOrderInfo;
+	
+	private Group grpGroundType;
+	private Group grpInGround;
+	private Group grpSprinklerType;
+	private Label lblGroundImage;
+	private Label lblYardPrice;
+	
+	private Composite compositePlants;
+	private Composite compositeTrees;
+	private Composite compositeInfo;
+	
+	private TabFolder tabFolder;
+	
+	private org.eclipse.swt.widgets.List listOrders;
+	
+	
+	private YardType currentOrderYard = new YardType();
+	private IrrigationType currentOrderIrrigation = new IrrigationType();
+	private Address currentCustomerAddress = new Address();
+	private Address currentOrderAddress = new Address();
+	private List<PlantType> orderPlants = new ArrayList<PlantType>();
+	private ArrayList<Order> orders = new ArrayList<Order>();
+	private TreeType tree = new TreeType();
+	private PlantType selectedPlant;
+	private Text textIrrigationZones;
+	private int orderID = 0;
+	private Text textSelectedOrder;
 	
 	private boolean validateInputs() {  // Only applicable to order information screen. Order object contains address of order, customer object contains billing address only
 		if(textOrderName.getText().equals("")){
@@ -149,9 +187,68 @@ public class MainGUI {
 	
     public void submitOrder()
     {
-        JOptionPane.showMessageDialog(null, "Method is not complete.");
+    	Customer thisCust = createCustomer();
+    	orderID++;
+    	Order thisOrder = new Order(thisCust, thisCust.getAddress(), currentOrderYard, currentOrderIrrigation, orderPlants, tree, Double.parseDouble(textYardLength.getText()), Double.parseDouble(textYardWidth.getText()), orderID);
+        listOrders.add(String.format("%s - (%s)", thisOrder.getCustomer().getName(), thisOrder.getOrderID()));
+        orders.add(thisOrder);
+    }
+    
+   
+    /*
+     * TODO: Run a single loop that goes through the entire frame?
+     */
+	public void reset() {
+    	for( Control c : grpGroundType.getChildren()) {
+    		Button selectedButton = (Button) c;
+    		selectedButton.setSelection(false);
+    	}
+    	for( Control c : grpInGround.getChildren()) {
+    		if(c instanceof Button) {
+    			Button selectedButton = (Button) c;
+        		selectedButton.setSelection(false);	
+    		}
+    	}
+    	for( Control c : grpSprinklerType.getChildren()) {
+    		if(c instanceof Button) {
+    			Button selectedButton = (Button) c;
+        		selectedButton.setSelection(false);	
+    		}
+    	}
+    	for( Control c : compositePlants.getChildren()) {
+    		if(c instanceof Button) {
+    			Button selectedButton = (Button) c;
+        		selectedButton.setSelection(false);
+    		}
+    		if(c instanceof Text) {
+    			Text selectedText = (Text) c;
+    			selectedText.setText("0");
+    		}
+    	}
+    	for( Control c: compositeTrees.getChildren()) {
+    		if(c instanceof Scale) {
+    			Scale selectedScale = (Scale) c;
+    			selectedScale.setSelection(0);
+    		}
+    		if(c instanceof Combo) {
+    			Combo selectedCombo = (Combo) c;
+    			selectedCombo.setItem(0, "Oak");
+    		}
+    	}
+    	for( Control c: compositeInfo.getChildren()) {
+    		if(c instanceof Text) {
+    			Text selectedText = (Text) c;
+    			selectedText.setText("");
+    		}
+    		
+    	}
+    	lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/dirt.png"));
+    	lblYardPrice.setText("Please select a ground type.");
+    	tabFolder.setSelection(0);
+    	
     }
 
+	
 	/**
 	 * Launch the application.
 	 * @param args
@@ -189,7 +286,7 @@ public class MainGUI {
 		shlJaredSylviaLandscapes.setSize(803, 539);
 		shlJaredSylviaLandscapes.setText("Jared Sylvia Landscapes");
 		
-		TabFolder tabFolder = new TabFolder(shlJaredSylviaLandscapes, SWT.NONE);
+		tabFolder = new TabFolder(shlJaredSylviaLandscapes, SWT.NONE);
 		tabFolder.setBounds(10, 10, 768, 425);
 		
 		TabItem tbtmGroundType = new TabItem(tabFolder, SWT.NONE);
@@ -199,71 +296,14 @@ public class MainGUI {
 		tbtmGroundType.setControl(compositeGround);
 		compositeGround.setLayout(null);
 		
-		Label lblGroundImage = new Label(compositeGround, SWT.NONE);
+		lblGroundImage = new Label(compositeGround, SWT.NONE);
 		lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/gravel.png"));
 		lblGroundImage.setBounds(280, 120, 400, 200);
 		
-		Button btnGravel = new Button(compositeGround, SWT.RADIO);
-		btnGravel.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-			}
-		});
-		btnGravel.setSelection(true);
-		btnGravel.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
-		btnGravel.setBounds(75, 150, 90, 16);
-		btnGravel.setText("Gravel");
-		btnGravel.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/gravel.png"));
-			}
-		});
-		
-		
-		Button btnAsphalt = new Button(compositeGround, SWT.RADIO);
-		btnAsphalt.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
-		btnAsphalt.setBounds(75, 180, 90, 16);
-		btnAsphalt.setText("Asphalt");
-		btnAsphalt.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/asphalt.png"));
-			}
-		});
-		
-		Button btnTurf = new Button(compositeGround, SWT.RADIO);
-		btnTurf.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
-		btnTurf.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/turf.png"));
-			}
-		});
-		btnTurf.setBounds(75, 210, 90, 16);
-		btnTurf.setText("Turf");
-		
-		Button btnMulch = new Button(compositeGround, SWT.RADIO);
-		btnMulch.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
-		btnMulch.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/mulch.png"));
-			}
-		});
-		btnMulch.setBounds(75, 240, 90, 16);
-		btnMulch.setText("Mulch");
-		
-		Button btnGrass = new Button(compositeGround, SWT.RADIO);
-		btnGrass.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
-		btnGrass.setText("Grass");
-		btnGrass.setBounds(75, 270, 90, 16);
-		btnGrass.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/grass.png"));
-			}
-		});
+		lblYardPrice = new Label(compositeGround, SWT.NONE);
+		lblYardPrice.setAlignment(SWT.CENTER);
+		lblYardPrice.setBounds(419, 347, 120, 15);
+		lblYardPrice.setText("$2.00/sq. ft.");
 		
 		Label lblJaredSylviaLandscapeGround = new Label(compositeGround, SWT.NONE);
 		lblJaredSylviaLandscapeGround.setText("Jared Sylvia Landscapes");
@@ -274,6 +314,97 @@ public class MainGUI {
 		orderDescriptor.setAlignment(SWT.CENTER);
 		orderDescriptor.setText("Ground Types");
 		orderDescriptor.setBounds(215, 65, 314, 15);
+		
+		grpGroundType = new Group(compositeGround, SWT.NONE);
+		grpGroundType.setText("Ground Type:");
+		grpGroundType.setBounds(60, 120, 174, 187);
+		
+		Button btnGravel = new Button(grpGroundType, SWT.RADIO);
+		btnGravel.setLocation(10, 30);
+		btnGravel.setSize(90, 16);
+		btnGravel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+			}
+		});
+		btnGravel.setSelection(true);
+		btnGravel.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
+		btnGravel.setText("Gravel");
+		
+		
+		Button btnAsphalt = new Button(grpGroundType, SWT.RADIO);
+		btnAsphalt.setLocation(10, 60);
+		btnAsphalt.setSize(90, 16);
+		btnAsphalt.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
+		btnAsphalt.setText("Asphalt");
+		
+		Button btnTurf = new Button(grpGroundType, SWT.RADIO);
+		btnTurf.setLocation(10, 90);
+		btnTurf.setSize(90, 16);
+		btnTurf.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
+		btnTurf.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/turf.png"));
+				lblYardPrice.setText("$12.00/sq. ft.");
+				currentOrderYard.setPrice(12.00);
+				currentOrderYard.setType("Turf");
+			}
+		});
+		btnTurf.setText("Turf");
+		
+		Button btnMulch = new Button(grpGroundType, SWT.RADIO);
+		btnMulch.setLocation(10, 120);
+		btnMulch.setSize(90, 16);
+		btnMulch.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
+		btnMulch.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/mulch.png"));
+				lblYardPrice.setText("$0.50/sq. ft.");
+				currentOrderYard.setPrice(0.50);
+				currentOrderYard.setType("Mulch");
+				
+			}
+		});
+		btnMulch.setText("Mulch");
+		
+		Button btnGrass = new Button(grpGroundType, SWT.RADIO);
+		btnGrass.setLocation(10, 150);
+		btnGrass.setSize(90, 16);
+		btnGrass.setFont(SWTResourceManager.getFont("Calibri", 10, SWT.NORMAL));
+		btnGrass.setText("Grass");
+		btnGrass.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/grass.png"));
+				lblYardPrice.setText("$1.50/sq. ft.");
+				currentOrderYard.setPrice(1.50);
+				currentOrderYard.setType("Grass");
+				
+			}
+		});
+		btnAsphalt.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/asphalt.png"));
+				lblYardPrice.setText("$5.00/sq. ft.");
+				currentOrderYard.setPrice(5.00);
+				currentOrderYard.setType("Asphalt");
+				
+			}
+		});
+		btnGravel.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblGroundImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/ground/gravel.png"));
+				lblYardPrice.setText("$2.00/sq. ft.");
+				currentOrderYard.setPrice(2.00);
+				currentOrderYard.setType("Gravel");
+			}
+		});
+		
+		
 		
 		TabItem tbtmIrrigationType = new TabItem(tabFolder, SWT.NONE);
 		tbtmIrrigationType.setText("Irrigation");
@@ -291,13 +422,10 @@ public class MainGUI {
 		orderDescriptorIrrigation.setAlignment(SWT.CENTER);
 		orderDescriptorIrrigation.setBounds(215, 65, 314, 15);
 		
-		Button btnNextIrrigation = new Button(compositeIrrigation, SWT.NONE);
-		btnNextIrrigation.setText("Next");
-		btnNextIrrigation.setBounds(675, 400, 75, 25);
-		
-		Group grpInGround = new Group(compositeIrrigation, SWT.NONE);
+		grpInGround = new Group(compositeIrrigation, SWT.NONE);
 		grpInGround.setText("In Ground");
 		grpInGround.setBounds(41, 98, 315, 260);
+		
 		
 		Label lblInGround = new Label(grpInGround, SWT.NONE);
 		lblInGround.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/irrigation/inGround.png"));
@@ -310,6 +438,7 @@ public class MainGUI {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				lblInGround.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/irrigation/aboveGround.png"));
+				currentOrderIrrigation.setInGround(false);
 			}
 		});
 		Button btnInGround = new Button(grpInGround, SWT.RADIO);
@@ -321,12 +450,13 @@ public class MainGUI {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				lblInGround.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/irrigation/inGround.png"));
+				currentOrderIrrigation.setInGround(true);
 			}
 		});
 		
 		
 		
-		Group grpSprinklerType = new Group(compositeIrrigation, SWT.NONE);
+		grpSprinklerType = new Group(compositeIrrigation, SWT.NONE);
 		grpSprinklerType.setText("Sprinkler Type");
 		grpSprinklerType.setBounds(400, 98, 315, 260);
 		
@@ -340,6 +470,7 @@ public class MainGUI {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				lblSprinklerType.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/irrigation/regSprinkler.png"));
+				currentOrderIrrigation.setDrip(false);
 			}
 		});
 		btnConventional.setSelection(true);
@@ -351,15 +482,48 @@ public class MainGUI {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				lblSprinklerType.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/irrigation/dripSprinkler.png"));
+				currentOrderIrrigation.setDrip(true);
 			}
 		});
 		btnDrip.setBounds(10, 60, 90, 16);
 		btnDrip.setText("Drip");
 		
+		textIrrigationZones = new Text(compositeIrrigation, SWT.BORDER);
+		textIrrigationZones.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				try {
+					if(Double.parseDouble(textIrrigationZones.getText()) > 0) {
+						currentOrderIrrigation.setZones(Integer.parseInt(textIrrigationZones.getText()));
+					}
+					else {
+						currentOrderIrrigation.setZones(1);
+						JOptionPane.showMessageDialog(null, "Zones must be numeric and at least 1.",
+								"Zones Error", JOptionPane.ERROR_MESSAGE);
+						textIrrigationZones.setFocus();
+						textIrrigationZones.setText("1");
+					}
+				}
+				catch(NumberFormatException nFE) {
+					currentOrderIrrigation.setZones(1);
+					JOptionPane.showMessageDialog(null, "Zones must be numeric and at least 1.",
+							"Zones Error", JOptionPane.ERROR_MESSAGE);
+					textIrrigationZones.setFocus();
+					textIrrigationZones.setText("1");
+				}
+				
+			}
+		});
+		textIrrigationZones.setBounds(639, 366, 76, 21);
+		
+		Label lblIrrigationZones = new Label(compositeIrrigation, SWT.NONE);
+		lblIrrigationZones.setBounds(565, 372, 55, 15);
+		lblIrrigationZones.setText("Zones");
+		
 		TabItem tbtmPlantType = new TabItem(tabFolder, SWT.NONE);
 		tbtmPlantType.setText("Plants");
 		
-		Composite compositePlants = new Composite(tabFolder, SWT.NONE);
+		compositePlants = new Composite(tabFolder, SWT.NONE);
 		tbtmPlantType.setControl(compositePlants);
 		
 		Label lblJaredSylviaLandscapePlants = new Label(compositePlants, SWT.NONE);
@@ -375,35 +539,252 @@ public class MainGUI {
 		Button btnBeardTongue = new Button(compositePlants, SWT.CHECK);
 		btnBeardTongue.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/BeardTongue.png"));
 		btnBeardTongue.setBounds(65, 115, 125, 100);
+		btnBeardTongue.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnBeardTongue.getSelection() == true) {
+					orderPlants.add(new PlantType("Beardtongue", 13.99));
+					if (Integer.parseInt(textQtyBeardTongue.getText()) <= 0) {
+						textQtyBeardTongue.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("Beardtongue")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnBeardTongue.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("Beardtongue")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
 		
 		Button btnBlueEyedGrass = new Button(compositePlants, SWT.CHECK);
 		btnBlueEyedGrass.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/BlueEyedGrass.png"));
 		btnBlueEyedGrass.setBounds(235, 115, 125, 100);
+		btnBlueEyedGrass.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnBlueEyedGrass.getSelection() == true) {
+					orderPlants.add(new PlantType("Blue-eyed Grass", 21.99));
+					if (Integer.parseInt(textQtyBlueEyedGrass.getText()) <= 0) {
+						textQtyBlueEyedGrass.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("Blue-eyed Grass")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnBlueEyedGrass.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("Blue-eyed Grass")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
 		
 		Button btnCaliforniaFuschia = new Button(compositePlants, SWT.CHECK);
 		btnCaliforniaFuschia.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/CaliforniaFuschia.png"));
 		btnCaliforniaFuschia.setBounds(405, 115, 125, 100);
+		btnCaliforniaFuschia.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnCaliforniaFuschia.getSelection() == true) {
+					orderPlants.add(new PlantType("California Fuschia", 25.99));
+					if (Integer.parseInt(textQtyCaliforniaFuschia.getText()) <= 0) {
+						textQtyCaliforniaFuschia.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("California Fuschia")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnCaliforniaFuschia.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("California Fuschia")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
 		
 		Button btnCatalinaCurrant = new Button(compositePlants, SWT.CHECK);
 		btnCatalinaCurrant.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/CatalinaCurrent.png"));
 		btnCatalinaCurrant.setBounds(575, 115, 125, 100);
+		btnCatalinaCurrant.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnCatalinaCurrant.getSelection() == true) {
+					orderPlants.add(new PlantType("Catalina Currant", 18.99));
+					if (Integer.parseInt(textQtyCatalinaCurrant.getText()) <= 0) {
+						textQtyCatalinaCurrant.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("Catalina Currant")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnCatalinaCurrant.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("Catalina Currant")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
+
 		
 		Button btnDeerGrass = new Button(compositePlants, SWT.CHECK);
 		btnDeerGrass.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/Deergrass.png"));
 		btnDeerGrass.setBounds(65, 249, 125, 100);
+		btnDeerGrass.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnDeerGrass.getSelection() == true) {
+					orderPlants.add(new PlantType("Deer Grass", 15.99));
+					if (Integer.parseInt(textQtyDeerGrass.getText()) <= 0) {
+						textQtyDeerGrass.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("Deer Grass")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnDeerGrass.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("Deer Grass")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
+
 		
 		Button btnDouglasIris = new Button(compositePlants, SWT.CHECK);
 		btnDouglasIris.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/DouglasIris.png"));
 		btnDouglasIris.setBounds(235, 249, 125, 100);
+		btnDouglasIris.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnDouglasIris.getSelection() == true) {
+					orderPlants.add(new PlantType("Douglas Iris", 19.99));
+					if (Integer.parseInt(textQtyDouglasIris.getText()) <= 0) {
+						textQtyDouglasIris.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("Douglas Iris")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnDouglasIris.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("Douglas Iris")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
+
 		
 		Button btnManzanita = new Button(compositePlants, SWT.CHECK);
 		btnManzanita.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/Manzanita.png"));
 		btnManzanita.setBounds(405, 249, 125, 100);
+		btnManzanita.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnManzanita.getSelection() == true) {
+					orderPlants.add(new PlantType("Manzanita", 11.99));
+					if (Integer.parseInt(textQtyManzanita.getText()) <= 0) {
+						textQtyManzanita.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("Manzanita")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnManzanita.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("Manzanita")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
+
 		
 		Button btnSage = new Button(compositePlants, SWT.CHECK);
 		btnSage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/plants/Sage.png"));
 		btnSage.setBounds(575, 249, 125, 100);
-		
+		btnSage.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (btnSage.getSelection() == true) {
+					orderPlants.add(new PlantType("Sage", 11.99));
+					if (Integer.parseInt(textQtySage.getText()) <= 0) {
+						textQtySage.setText("1");
+						for(PlantType plant : orderPlants) {
+							if(plant.getType().equals("Sage")) {
+								plant.setQty(1);
+							}
+						}
+					}
+				}
+				else if (btnSage.getSelection() == false) {
+					for(PlantType plant : orderPlants) {
+						if(plant.getType().equals("Sage")) {
+							selectedPlant = plant;
+							
+						}
+					}
+					orderPlants.remove(selectedPlant);
+					
+				}
+			}
+		});
+
+		/* TODO: Each text field needs handlers to detect the qty number changing
+		 * They should first check to see if the plant pictured is selected
+		 * If checked then set qty of the corresponding object to the qty in the text field
+		 * if unchecked then do nothing.
+		 * */
 		textQtyBeardTongue = new Text(compositePlants, SWT.BORDER);
 		textQtyBeardTongue.setText("0");
 		textQtyBeardTongue.setBounds(118, 221, 25, 21);
@@ -439,7 +820,7 @@ public class MainGUI {
 		TabItem tbtmTrees = new TabItem(tabFolder, SWT.NONE);
 		tbtmTrees.setText("Trees");
 		
-		Composite compositeTrees = new Composite(tabFolder, SWT.NONE);
+		compositeTrees = new Composite(tabFolder, SWT.NONE);
 		tbtmTrees.setControl(compositeTrees);
 		
 		Label lblJaredSylviaLandscapeTrees = new Label(compositeTrees, SWT.NONE);
@@ -460,6 +841,19 @@ public class MainGUI {
 		lblQtyTrees.setBounds(474, 230, 67, 15);
 		lblQtyTrees.setText("Quantity: 0");
 		
+		Scale scaleQtyTrees = new Scale(compositeTrees, SWT.NONE);
+		scaleQtyTrees.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblQtyTrees.setText(String.format("Quantity: %s", scaleQtyTrees.getSelection()));
+				tree.setQty(scaleQtyTrees.getSelection());
+			}
+			
+		});
+		scaleQtyTrees.setPageIncrement(1);
+		scaleQtyTrees.setMaximum(5);
+		scaleQtyTrees.setBounds(465, 182, 204, 42);
+		
 		Combo comboTrees = new Combo(compositeTrees, SWT.NONE);
 		comboTrees.setVisibleItemCount(4);
 		comboTrees.setItems(new String[] {"Oak", "Japanese Maple", "Sweet Gum", "Modesto Ash"});
@@ -470,37 +864,41 @@ public class MainGUI {
 			public void widgetSelected(SelectionEvent e) {
 				if(comboTrees.getSelectionIndex() == 0) {
 					lblTreeImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/trees/Oak.png"));
+					tree.setPrice(3500);
+					tree.setType("Oak");
 				}
 				
 				if(comboTrees.getSelectionIndex() == 1) {
 					lblTreeImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/trees/JapaneseMaple.png"));
+					tree.setPrice(125);
+					tree.setType("Japanese Maple");
 				}
 				
 				if(comboTrees.getSelectionIndex() == 2) {
 					lblTreeImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/trees/SweetGum.png"));
+					tree.setPrice(145.75);
+					tree.setType("Sweet Gum");
+					
 				}
 				
 				if(comboTrees.getSelectionIndex() == 3) {
 					lblTreeImage.setImage(SWTResourceManager.getImage(MainGUI.class, "/landscapingImg/trees/ModestoAsh.png"));
+					tree.setPrice(150.50);
+					tree.setType("Modesto Ash");
 				}
+								
 			}
 		});
 		
-		Scale scaleQtyTrees = new Scale(compositeTrees, SWT.NONE);
-		scaleQtyTrees.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblQtyTrees.setText(String.format("Quantity: %s", scaleQtyTrees.getSelection()));
-			}
-		});
-		scaleQtyTrees.setPageIncrement(1);
-		scaleQtyTrees.setMaximum(5);
-		scaleQtyTrees.setBounds(465, 182, 204, 42);
-				
+		
+		/* TODO: Need a second address field to differentiate between 
+		 * bill to address and address where work should be done
+		 * Additionally a check box that indicates whether billing and 
+		 * work address are the same or different*/		
 		TabItem tbtmInformation = new TabItem(tabFolder, SWT.NONE);
 		tbtmInformation.setText("Information");
 		
-		Composite compositeInfo = new Composite(tabFolder, SWT.NONE);
+		compositeInfo = new Composite(tabFolder, SWT.NONE);
 		compositeInfo.setFont(SWTResourceManager.getFont("Calibri", 24, SWT.BOLD));
 		tbtmInformation.setControl(compositeInfo);
 		
@@ -579,16 +977,22 @@ public class MainGUI {
 		textOrderInfo.setEditable(false);
 		textOrderInfo.setBounds(420, 125, 300, 210);
 		
+		/* This method needs to be replaced, now that all tabs generate their relative
+		 * objects those objects can be formed into an order. We need a method to store orders
+		 * and customers separately with a field where they are linked, an order should have
+		 * one customer (which is currently does) while a customer can have many orders.
+		 * I'm not sure if this should be represented in the code or if it should be solely
+		 * handled in a database.
+		 * 
+		 * I would imagine all options on all tabs to be stored in a relational database
+		 * and generated dynamically, allowing for this app to be deployed on multiple sales
+		 * machines while staying synced to current prices and options.
+		 * 
+		 * A backend management app with direct access to a database and various API endpoints
+		 * could easily allow a scalable and adaptive solution.
+		*/
 		Button btnCalculate = new Button(compositeInfo, SWT.NONE);
 		btnCalculate.addSelectionListener(new SelectionAdapter() {
-			/* As you can tell GUI is more fleshed out than current week requirements
-			 * Some information has been relocated from customer class and included in more appropriate classes
-			 * Each class calculates price of those components of a landscape
-			 * For the purposes of being able to turn this in on time I have omitted much of the code to get those tabs to work correctly
-			 * The customer object does not contain all the information that should be displayed in the text box for this assignment
-			 * And is instead located in YardType and Order classes
-			 * Those classes are nearly complete and if inspected I believe should exceed the requirements of this assignment 
-			 */
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if(validateInputs() == false) {
@@ -619,14 +1023,106 @@ public class MainGUI {
 		TabItem tbtmCustomerList = new TabItem(tabFolder, SWT.NONE);
 		tbtmCustomerList.setText("Customer List");
 		
+		Composite compositeCustomerList = new Composite(tabFolder, SWT.NONE);
+		tbtmCustomerList.setControl(compositeCustomerList);
+		
+		Label lblJaredSylviaLandscapeInfo_1 = new Label(compositeCustomerList, SWT.NONE);
+		lblJaredSylviaLandscapeInfo_1.setText("Jared Sylvia Landscapes");
+		lblJaredSylviaLandscapeInfo_1.setFont(SWTResourceManager.getFont("Calibri", 24, SWT.BOLD));
+		lblJaredSylviaLandscapeInfo_1.setBounds(215, 20, 314, 45);
+		
+		Label lblOrderList = new Label(compositeCustomerList, SWT.NONE);
+		lblOrderList.setText("Order List");
+		lblOrderList.setAlignment(SWT.CENTER);
+		lblOrderList.setBounds(215, 65, 314, 15);
+		
+		listOrders = new org.eclipse.swt.widgets.List(compositeCustomerList, SWT.BORDER);
+		listOrders.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				String selectedOrderFull = listOrders.getItem(listOrders.getSelectionIndex());
+				String selectedOrderSub = selectedOrderFull.substring(selectedOrderFull.indexOf("(")+1, selectedOrderFull.indexOf(")"));
+				int selectedOrderID = Integer.parseInt(selectedOrderSub);
+				for (Order order: orders) {
+					if(order.getOrderID() == selectedOrderID) {
+						textSelectedOrder.setText(order.toString());
+					}
+				}
+			}
+		});
+		
+		listOrders.setBounds(25, 100, 325, 250);
+		
+		textSelectedOrder = new Text(compositeCustomerList, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+		textSelectedOrder.setBounds(400, 100, 325, 250);
+		
 		Menu menu = new Menu(shlJaredSylviaLandscapes, SWT.BAR);
 		shlJaredSylviaLandscapes.setMenuBar(menu);
 		
-		MenuItem mntmFile = new MenuItem(menu, SWT.NONE);
+		MenuItem mntmFile = new MenuItem(menu, SWT.CASCADE);
 		mntmFile.setText("File");
 		
-		MenuItem mntmOrder = new MenuItem(menu, SWT.NONE);
+		Menu menuFile = new Menu(mntmFile);
+		mntmFile.setMenu(menuFile);
+		
+		MenuItem mntmSave = new MenuItem(menuFile, SWT.NONE);
+		mntmSave.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				String fileName = JOptionPane.showInputDialog("Enter file name: ");
+				OrderIO outputFileName = new OrderIO(fileName);
+				outputFileName.saveData(orders);
+			}
+		});
+		mntmSave.setText("Save");
+		
+		MenuItem mntmOpen = new MenuItem(menuFile, SWT.NONE);
+		mntmOpen.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				String fileName = JOptionPane.showInputDialog("Enter file name: ");
+				OrderIO inputFileName = new OrderIO(fileName);
+				ArrayList<Order> loadOrders = inputFileName.getData();
+				for(Order order : loadOrders) {
+					listOrders.add(String.format("%s - (%s)", order.getCustomer().getName(), order.getOrderID()));
+			        orders.add(order);
+				}
+			}
+		});
+		mntmOpen.setText("Open");
+		
+		MenuItem mntmExit = new MenuItem(menuFile, SWT.NONE);
+		mntmExit.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				System.exit(0);
+			}
+		});
+		mntmExit.setText("Exit");
+		
+		MenuItem mntmOrder = new MenuItem(menu, SWT.CASCADE);
 		mntmOrder.setText("Order");
+		
+		Menu menuOrder = new Menu(mntmOrder);
+		mntmOrder.setMenu(menuOrder);
+		
+		MenuItem mntmReset = new MenuItem(menuOrder, SWT.NONE);
+		mntmReset.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				reset();
+			}
+		});
+		mntmReset.setText("Reset");
+		
+		MenuItem mntmSubmitOrder = new MenuItem(menuOrder, SWT.NONE);
+		mntmSubmitOrder.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				submitOrder();
+			}
+		});
+		mntmSubmitOrder.setText("Submit Order");
 		
 		Button btnNext = new Button(shlJaredSylviaLandscapes, SWT.NONE);
 		btnNext.addSelectionListener(new SelectionAdapter() {
@@ -659,7 +1155,17 @@ public class MainGUI {
 		});
 		btnPrevious.setBounds(10, 450, 75, 25);
 		btnPrevious.setText("Previous");
-		tabFolder.setSelection(4);
+		tabFolder.setSelection(0);
+		
+		Button btnStartOver = new Button(shlJaredSylviaLandscapes, SWT.NONE);
+		btnStartOver.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				reset();
+			}
+		});
+		btnStartOver.setBounds(91, 450, 75, 25);
+		btnStartOver.setText("Start Over");
 		
 
 	}

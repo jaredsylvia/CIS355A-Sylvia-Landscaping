@@ -37,6 +37,9 @@ public class YardType {
 	//getters and setters
 	public String getType() {return groundStyle;}
 	public double getPrice() {return price;}
+	public double getCost(Order order) {
+		return getPrice() * order.getArea();
+	}
 	public void setType(String t) {groundStyle = t;}
 	public void setPrice(double p) {price = p;}
 	

@@ -52,6 +52,7 @@ public class TreeType {
 	public double getCost() {return price * qty;}
 	public void setType(String t) {treeStyle = t;}
 	public void setPrice(double p) {price = p;}
+	public void setQty(int q) {qty = q;}
 	
 	
 }

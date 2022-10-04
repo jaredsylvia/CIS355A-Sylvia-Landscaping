@@ -17,7 +17,6 @@ public class Address {
 	//constructors
 	public Address() {
 		line1 = "123 Main Street";
-		line2 = "C/O: John Doe";
 		city = "Anytown";
 		state = "USA";
 		zipCode = "00000";
@@ -25,7 +24,9 @@ public class Address {
 	}
 	public Address(String l1, String l2, String c, String s, String z) {
 		line1 = l1;
-		line2 = l2;
+		if(!l2.isBlank()) {
+			line2 = l2;
+		}
 		city = c;
 		state = s;
 		zipCode = z;

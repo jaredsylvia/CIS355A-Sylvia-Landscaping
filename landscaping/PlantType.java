@@ -51,4 +51,5 @@ public class PlantType {
 	public double getCost() {return price * qty;}
 	public void setType(String t) {plantStyle = t;}
 	public void setPrice(double p) {price = p;}
+	public void setQty(int q) {qty = q;}
 }
