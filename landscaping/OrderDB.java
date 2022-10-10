@@ -114,7 +114,7 @@ public class OrderDB {
 			openDB();
 			String plantsCSV = "";
 			for(PlantType plant : order.getPlantTypes()) {
-				plantsCSV = plantsCSV + String.format("%s, %s, %s,", plant.getType(), plant.getCost(), plant.getQty());
+				plantsCSV = plantsCSV + String.format("%s,%s,%s,", plant.getType(), plant.getCost(), plant.getQty());
 			}
 			String sql = String.format(
 					"INSERT INTO orders (orderID, name, cusAddLine1, cusAddLine2, cusCity, cusState, cusZip, orderAddLine1, orderAddLine2," +
