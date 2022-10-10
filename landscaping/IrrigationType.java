@@ -51,6 +51,18 @@ public class IrrigationType {
 	//getters and setters
 	public boolean getInGround() {return inGround;}
 	public boolean getDrip() {return drip;}
+	public int getInGroundInt() {
+		if(inGround == false) {
+			return 0;
+		}
+		return 1;
+	}
+	public int getDripInt() {
+		if(drip == false) {
+			return 0;
+		}
+		return 1;
+	}
 	public int getZones() {return zones;}
 	public double getPrice(Order order) {
 		double plumbingCost = 0.0;

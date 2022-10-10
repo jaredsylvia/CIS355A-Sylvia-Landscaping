@@ -15,7 +15,7 @@ public class Order {
 	private Address address;
 	private YardType yardType;
 	private IrrigationType irrigationType;
-	private List<PlantType> plantTypes;
+	private ArrayList<PlantType> plantTypes;
 	private TreeType treeType;
 	private double length, width; 
 	int orderID;
@@ -31,11 +31,11 @@ public class Order {
 		treeType = new TreeType();
 		length = 0;
 		width = 0;
-		orderID = 0;
+		orderID = orderID();
 		
 	}
 	
-	public Order(Customer c, Address a, YardType y, IrrigationType i, List<PlantType> p, TreeType t, double l, double w, int o) {
+	public Order(Customer c, Address a, YardType y, IrrigationType i, ArrayList<PlantType> p, TreeType t, double l, double w, int o) {
 		customer = c;
 		address =a;
 		yardType = y;
@@ -54,8 +54,12 @@ public class Order {
 		for(PlantType p: plantTypes) {
 			plants = plants + p.toString() + ",";
 		}
+		try {
 		plants.substring(0, plants.length() - 1);
-			
+		}
+		catch (StringIndexOutOfBoundsException e) {
+			plants = "None";
+		}
 		return String.format("OrderID: %s\n"
 				+ "Customer: %s\n"
 				+ "Address: %s\n%s, %s %s\n"
@@ -73,12 +77,18 @@ public class Order {
 		plantTypes.add(plant);
 	}
 	
+	static int orderID() {
+		long timeMilli = System.currentTimeMillis();
+		String orderString = String.valueOf(timeMilli);
+		return Integer.parseInt(orderString.substring(4, 11));
+	}
+	
 	//getters and setters
 	public Customer getCustomer() {return customer;}
 	public Address getAddress() {return address;}
 	public YardType getYardType() {return yardType;}
 	public IrrigationType getIrrigationType() { return irrigationType;}
-	public List<PlantType> getPlantTypes() { return plantTypes;}
+	public ArrayList<PlantType> getPlantTypes() { return plantTypes;}
 	public TreeType getTreeTypes() { return treeType;}
 	public double getLength() { return length;}
 	public double getWidth() { return width;}

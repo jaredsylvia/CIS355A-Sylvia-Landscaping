@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Scale;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.swing.JOptionPane;
 import org.eclipse.swt.events.FocusAdapter;
@@ -80,13 +81,15 @@ public class MainGUI {
 	private IrrigationType currentOrderIrrigation = new IrrigationType();
 	private Address currentCustomerAddress = new Address();
 	private Address currentOrderAddress = new Address();
-	private List<PlantType> orderPlants = new ArrayList<PlantType>();
+	private ArrayList<PlantType> orderPlants = new ArrayList<PlantType>();
 	private ArrayList<Order> orders = new ArrayList<Order>();
 	private TreeType tree = new TreeType();
 	private PlantType selectedPlant;
 	private Text textIrrigationZones;
 	private int orderID = 0;
 	private Text textSelectedOrder;
+	
+	private OrderDB orderDB = new OrderDB();
 	
 	private boolean validateInputs() {  // Only applicable to order information screen. Order object contains address of order, customer object contains billing address only
 		if(textOrderName.getText().equals("")){
@@ -189,9 +192,18 @@ public class MainGUI {
     {
     	Customer thisCust = createCustomer();
     	orderID++;
-    	Order thisOrder = new Order(thisCust, thisCust.getAddress(), currentOrderYard, currentOrderIrrigation, orderPlants, tree, Double.parseDouble(textYardLength.getText()), Double.parseDouble(textYardWidth.getText()), orderID);
-        listOrders.add(String.format("%s - (%s)", thisOrder.getCustomer().getName(), thisOrder.getOrderID()));
-        orders.add(thisOrder);
+    	Order thisOrder = new Order(thisCust, thisCust.getAddress(), currentOrderYard, currentOrderIrrigation, orderPlants, tree, Double.parseDouble(textYardLength.getText()), Double.parseDouble(textYardWidth.getText()), Order.orderID());
+    	orders.add(thisOrder);
+    	listOrders.add(String.format("%s - (%s)", thisOrder.getCustomer().getName(), thisOrder.getOrderID()));
+        orderDB.addOrder(thisOrder);
+        
+    }
+    
+    public void populateFromDB() {
+    	orders = orderDB.getAll();
+    	for (Order order: orders) {
+    		listOrders.add(String.format("%s - (%s)", order.getCustomer().getName(), order.getOrderID()));
+    	}
     }
     
    
@@ -1037,12 +1049,15 @@ public class MainGUI {
 		lblOrderList.setBounds(215, 65, 314, 15);
 		
 		listOrders = new org.eclipse.swt.widgets.List(compositeCustomerList, SWT.BORDER);
+		populateFromDB();
 		listOrders.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				String selectedOrderFull = listOrders.getItem(listOrders.getSelectionIndex());
 				String selectedOrderSub = selectedOrderFull.substring(selectedOrderFull.indexOf("(")+1, selectedOrderFull.indexOf(")"));
+											
 				int selectedOrderID = Integer.parseInt(selectedOrderSub);
+				
 				for (Order order: orders) {
 					if(order.getOrderID() == selectedOrderID) {
 						textSelectedOrder.setText(order.toString());
@@ -1055,6 +1070,28 @@ public class MainGUI {
 		
 		textSelectedOrder = new Text(compositeCustomerList, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 		textSelectedOrder.setBounds(400, 100, 325, 250);
+		
+		Button btnDeleteOrder = new Button(compositeCustomerList, SWT.NONE);
+		btnDeleteOrder.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				String selectedOrderFull = listOrders.getItem(listOrders.getSelectionIndex());
+				String selectedOrderSub = selectedOrderFull.substring(selectedOrderFull.indexOf("(")+1, selectedOrderFull.indexOf(")"));
+				orderDB.deleteEntry(Integer.parseInt(selectedOrderSub));
+				Order selectedOrder = new Order();
+				for (Order order: orders) {
+					if (order.getOrderID() == Integer.parseInt(selectedOrderSub)) {
+						selectedOrder = order;
+					}
+				}
+				orders.remove(selectedOrder);
+				listOrders.remove(listOrders.getSelectionIndex());
+				textSelectedOrder.setText("");
+				
+			}
+		});
+		btnDeleteOrder.setBounds(650, 362, 75, 25);
+		btnDeleteOrder.setText("Delete Order");
 		
 		Menu menu = new Menu(shlJaredSylviaLandscapes, SWT.BAR);
 		shlJaredSylviaLandscapes.setMenuBar(menu);
